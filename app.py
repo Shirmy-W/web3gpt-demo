@@ -2,7 +2,13 @@
 import streamlit as st
 from PyPDF2 import PdfReader
 from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.vectorstores.faiss import FAISS
+from langchain.vectorstores import FAISS
+
+# ✅ 使用默认的 OpenAI 嵌入模型 text-embedding-ada-002
+embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
+
+# ✅ 构建向量数据库
+vectorstore = FAISS.from_texts(texts, embeddings)
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.llms import OpenAI
 from langchain.chains.question_answering import load_qa_chain
