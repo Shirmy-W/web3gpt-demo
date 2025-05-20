@@ -14,7 +14,8 @@ openai_api_key = st.sidebar.text_input("🔑 请输入你的 OpenAI API Key", ty
 uploaded_file = st.file_uploader("📄 上传你的区块链知识 PDF 文件", type="pdf")
 
 if uploaded_file and openai_api_key:
-    pdf_reader = PdfReader(uploaded_file)
+    # ✅ 读取上传 PDF 文件内容（兼容 Streamlit）
+    pdf_reader = PdfReader(io.BytesIO(uploaded_file.read()))
     raw_text = ""
     for page in pdf_reader.pages:
         raw_text += page.extract_text() or ""
