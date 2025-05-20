@@ -1,6 +1,7 @@
 streamlit
 PyPDF2
-openai
 langchain==0.0.310
+openai>=1.0.0
 faiss-cpu
+streamlit
 tiktoken
