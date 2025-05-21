@@ -1,39 +1,27 @@
 import streamlit as st
-import io
-from PyPDF2 import PdfReader
-from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
-from langchain.chains.question_answering import load_qa_chain
-from langchain.llms import OpenAI
+from PyPDF2 import PdfReader
+import io
 
 st.set_page_config(page_title="Web3GPT", layout="wide")
+st.title("📄 Web3 合约知识问答助手")
 
-st.title("📘 Web3GPT - 区块链知识问答助手")
-openai_api_key = st.sidebar.text_input("🔑 请输入你的 OpenAI API Key", type="password")
-
-uploaded_file = st.file_uploader("📄 上传你的区块链知识 PDF 文件", type="pdf")
-
-if uploaded_file and openai_api_key:
-    # ✅ 读取上传 PDF 文件内容（兼容 Streamlit）
+uploaded_file = st.file_uploader("上传一份PDF文档", type="pdf")
+if uploaded_file is not None:
     pdf_reader = PdfReader(io.BytesIO(uploaded_file.read()))
-    raw_text = ""
+    text = ""
     for page in pdf_reader.pages:
-        raw_text += page.extract_text() or ""
+        text += page.extract_text() or ""
+    st.success("✅ 文档上传成功，开始构建知识库中...")
 
-    text_splitter = CharacterTextSplitter(separator="\n", chunk_size=1000, chunk_overlap=200)
-    texts = text_splitter.split_text(raw_text)
-
-    embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
+    embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
+    texts = [text[i:i+1000] for i in range(0, len(text), 1000)]
     vectorstore = FAISS.from_texts(texts, embeddings)
 
-    query = st.text_input("💬 输入你的问题（基于上传内容）")
-    if query:
-        llm = OpenAI(openai_api_key=openai_api_key, temperature=0)
-        chain = load_qa_chain(llm, chain_type="stuff")
-        docs = vectorstore.similarity_search(query)
-        response = chain.run(input_documents=docs, question=query)
-        st.markdown("### 🤖 回答：")
-        st.write(response)
-elif not openai_api_key:
-    st.info("🔐 请在左侧输入你的 OpenAI API Key")
+    st.success("✅ 知识库构建完成！你可以开始提问了")
+
+    question = st.text_input("请输入你的问题")
+    if question:
+        docs = vectorstore.similarity_search(question)
+        st.write("🤖 回答：", docs[0].page_content.strip())
