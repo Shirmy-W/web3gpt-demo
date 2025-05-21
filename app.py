@@ -15,7 +15,7 @@ if uploaded_file is not None:
         text += page.extract_text() or ""
     st.success("✅ 文档上传成功，开始构建知识库中...")
 
-    embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
+    embeddings = OpenAIEmbeddings(model_name="text-embedding-ada-002") 
     texts = [text[i:i+1000] for i in range(0, len(text), 1000)]
     vectorstore = FAISS.from_texts(texts, embeddings)
 
