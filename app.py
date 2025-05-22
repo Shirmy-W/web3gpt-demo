@@ -24,9 +24,12 @@ if uploaded_file and openai_api_key:
     text_splitter = CharacterTextSplitter(separator="\n", chunk_size=1000, chunk_overlap=200)
     texts = text_splitter.split_text(raw_text)
 
-    embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
-    texts = [text[i:i+1000] for i in range(0, len(text), 1000)]
+    embeddings = OpenAIEmbeddings(
+        model_name="text-embedding-ada-002",
+        openai_api_key=os.getenv("OPENAI_API_KEY")  # 确保部署环境中配置了环境变量
+    )
     vectorstore = FAISS.from_texts(texts, embeddings)
+    st.success("PDF 已成功上传并处理为向量。")
 
     llm = OpenAI(temperature=0)
     chain = load_qa_chain(llm, chain_type="stuff")
