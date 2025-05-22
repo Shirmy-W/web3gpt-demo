@@ -16,7 +16,8 @@ uploaded_file = st.file_uploader("📄 上传区块链 PDF 文件", type="pdf")
 question = st.text_input("💬 你想问什么？")
 
 if uploaded_file and openai_api_key:
-    pdf_reader = PdfReader(uploaded_file)
+    # ✅ 读取上传 PDF 文件内容（兼容 Streamlit）
+    pdf_reader = PdfReader(io.BytesIO(uploaded_file.read()))
     raw_text = ""
     for page in pdf_reader.pages:
         raw_text += page.extract_text() or ""
@@ -24,10 +25,10 @@ if uploaded_file and openai_api_key:
     text_splitter = CharacterTextSplitter(separator="\n", chunk_size=1000, chunk_overlap=200)
     texts = text_splitter.split_text(raw_text)
 
-    embeddings = OpenAIEmbeddings(
-        model_name="text-embedding-ada-002",
-        openai_api_key=os.getenv("OPENAI_API_KEY")  # 确保部署环境中配置了环境变量
-    )
+   embeddings = OpenAIEmbeddings(
+    model_name="text-embedding-ada-002",
+    openai_api_key=os.getenv("OPENAI_API_KEY")
+)
     vectorstore = FAISS.from_texts(texts, embeddings)
     st.success("PDF 已成功上传并处理为向量。")
 
