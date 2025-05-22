@@ -27,7 +27,7 @@ if uploaded_file and openai_api_key:
 
    embeddings = OpenAIEmbeddings(
     model_name="text-embedding-ada-002",
-    openai_api_key=os.getenv("OPENAI_API_KEY")
+    openai_api_key="sk-你的key"
 )
     vectorstore = FAISS.from_texts(texts, embeddings)
     st.success("PDF 已成功上传并处理为向量。")
