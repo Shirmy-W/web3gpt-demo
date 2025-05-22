@@ -1,40 +1,28 @@
 import os
-import streamlit as st
+from dotenv import load_dotenv
 from PyPDF2 import PdfReader
-from langchain.text_splitter import CharacterTextSplitter
+import streamlit as st
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 
-st.set_page_config(page_title="Web3GPT - 区块链知识问答", layout="wide")
+load_dotenv()  # 加载 .env 文件中的环境变量
 
-st.title("📘 Web3GPT - 区块链知识问答助手")
-st.write("上传你的区块链 PDF 文档，提出问题，让 GPT 为你回答。")
+st.title("Web3GPT 文档问答")
 
-api_key = st.text_input("🔑 输入你的 OpenAI API Key", type="password")
+uploaded_file = st.file_uploader("上传 PDF 文件", type="pdf")
 
-uploaded_file = st.file_uploader("📄 上传区块链 PDF 文件", type="pdf")
-question = st.text_input("💬 你想问什么？")
-
-if uploaded_file and openai_api_key:
-    # ✅ 读取上传 PDF 文件内容（兼容 Streamlit）
-    pdf_reader = PdfReader(io.BytesIO(uploaded_file.read()))
-    raw_text = ""
+if uploaded_file is not None:
+    pdf_reader = PdfReader(uploaded_file)
+    text = ""
     for page in pdf_reader.pages:
-        raw_text += page.extract_text() or ""
+        text += page.extract_text()
 
-    text_splitter = CharacterTextSplitter(separator="\n", chunk_size=1000, chunk_overlap=200)
-    texts = text_splitter.split_text(raw_text)
-
-   embeddings = OpenAIEmbeddings(
-        model_name="text-embedding-ada-002",
-        openai_api_key=os.getenv("OPENAI_API_KEY")  # 确保部署环境中配置了环境变量
+    # 设置 OpenAI Embeddings
+    embeddings = OpenAIEmbeddings(
+        model="text-embedding-ada-002",
+        openai_api_key=os.getenv("OPENAI_API_KEY")
     )
-    vectorstore = FAISS.from_texts(texts, embeddings)
-    st.success("PDF 已成功上传并处理为向量。")
 
-    llm = OpenAI(temperature=0)
-    chain = load_qa_chain(llm, chain_type="stuff")
-    response = chain.run(input_documents=docs, question=question)
+    vectorstore = FAISS.from_texts([text], embeddings)
 
-    st.write("🧠 GPT 的回答：")
-    st.success(response)
+    st.success("PDF 已处理完毕，可用于问答。")
