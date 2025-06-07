@@ -1,28 +1,42 @@
-import os
-from dotenv import load_dotenv
-from PyPDF2 import PdfReader
+
 import streamlit as st
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
+import openai
+import PyPDF2
+import faiss
+import numpy as np
+from utils import get_text_chunks, get_embeddings, search_index
 
-load_dotenv()  # 加载 .env 文件中的环境变量
+st.title("🧠 Web3GPT - 区块链知识问答助手")
 
-st.title("Web3GPT 文档问答")
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-uploaded_file = st.file_uploader("上传 PDF 文件", type="pdf")
+uploaded_file = st.file_uploader("📄 上传区块链相关PDF文件", type=["pdf"])
 
-if uploaded_file is not None:
-    pdf_reader = PdfReader(uploaded_file)
-    text = ""
-    for page in pdf_reader.pages:
-        text += page.extract_text()
+if uploaded_file:
+    pdf_reader = PyPDF2.PdfReader(uploaded_file)
+    full_text = "".join([page.extract_text() or "" for page in pdf_reader.pages])
 
-    # 设置 OpenAI Embeddings
-    embeddings = OpenAIEmbeddings(
-        model="text-embedding-ada-002",
-        openai_api_key=os.getenv("OPENAI_API_KEY")
-    )
+    chunks = get_text_chunks(full_text)
+    embeds = get_embeddings(chunks)
 
-    vectorstore = FAISS.from_texts([text], embeddings)
+    dim = len(embeds[0])
+    index = faiss.IndexFlatL2(dim)
+    index.add(np.array(embeds).astype("float32"))
 
-    st.success("PDF 已处理完毕，可用于问答。")
+    question = st.text_input("🤔 输入你的问题：")
+
+    if question:
+        related_chunks = search_index(question, index, chunks)
+        context = "\n".join(related_chunks)
+        prompt = f"基于以下内容回答问题：\n{context}\n\n问题：{question}\n回答："
+
+        with st.spinner("正在思考中..."):
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "你是一个区块链知识专家"},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            st.markdown("🧠 回答：")
+            st.write(response.choices[0].message.content)
