@@ -5,7 +5,8 @@ import faiss
 import numpy as np
 
 def get_text_chunks(text, chunk_size=500):
-    return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+    chunks = [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+    return chunks[:4]
 
 def get_embeddings(text_list, model="text-embedding-3-small"):
     response = openai.Embedding.create(
