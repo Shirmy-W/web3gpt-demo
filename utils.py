@@ -9,6 +9,8 @@ def get_text_chunks(text, chunk_size=500):
     return chunks[:4]
 
 def get_embeddings(text_list, model="text-embedding-3-small"):
+    print('get_embeddings -----------------》')
+    print(text_list)
     response = openai.Embedding.create(
         input=text_list,
         model=model
