@@ -22,5 +22,3 @@ def search_index(query, index, texts, k=3):
     query_vec = get_embeddings([query])[0]
     D, I = index.search(np.array([query_vec]).astype("float32"), k)
     return [texts[i] for i in I[0]]
-
-response = create_embedding("Your text")
